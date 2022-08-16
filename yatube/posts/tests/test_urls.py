@@ -43,7 +43,7 @@ class ContactURLTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_profile_url(self):
-        """Страница /profile/<str:username>/ для неавторизированного пользователя"""
+        """Страница profile для неавторизированного пользователя"""
         response = self.guest.get('/profile/test/')
         self.assertEqual(response.status_code, 200)
 
@@ -60,7 +60,7 @@ class ContactURLTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_posts_edit_url(self):
-        """Страница /posts/<post_id>/edit/ для неавторизированного пользователя, REDIRECT TO ..."""
+        """Редирект после редактирования поста для неавт. польз."""
         post_id = self.post.id
         response = self.guest.get(f'/posts/{post_id}/edit/', follow=True)
         self.assertRedirects(
@@ -72,7 +72,7 @@ class ContactURLTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_create_url(self):
-        """Страница /create/ для неавторизированного пользователя, REDIRECT TO ..."""
+        """Редирект /create/ для неавторизированного пользователя"""
         response = self.guest.get('/create/')
         self.assertRedirects(response, ('/auth/login/?next=/create/'))
 
@@ -86,8 +86,7 @@ class ContactURLTests(TestCase):
         post_id = self.post.id
         templates_url_names = {
             'posts/index.html': '/',
-            'posts/create_post.html': '/create/',
-            'posts/create_post.html': f'/posts/{post_id}/edit/',
+            'posts/create_post.html': ['/create/', f'/posts/{post_id}/edit/'],
             'posts/group_list.html': '/group/test-slug/',
             'posts/profile.html': '/profile/test/',
             'posts/post_detail.html': f'/posts/{post_id}/',
