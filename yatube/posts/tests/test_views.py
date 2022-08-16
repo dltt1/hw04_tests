@@ -45,11 +45,9 @@ class ContactURLTests(TestCase):
             'posts/profile.html': (
                 reverse('posts:profile', kwargs={'username': 'test'})
             ),
-            'posts/post_detail.html': [(
-                (reverse('posts:post_detail', kwargs={'post_id': post_id}),
-                 (reverse('posts:post_edit', kwargs={'post_id': post_id}))
-                 ))],
-            'posts/create_post.html': reverse('posts:post_create'),
+            'posts/post_detail.html': (
+                reverse('posts:post_detail', kwargs={'post_id': post_id})
+            ),
         }
         for template, reverse_name in templates_names.items():
             with self.subTest(template=template):
@@ -67,6 +65,7 @@ class ContactURLTests(TestCase):
             with self.subTest(value=value):
                 form = response.context['form'].fields[value]
                 self.assertIsInstance(form, expected)
+        self.assertTemplateUsed(response, 'posts/create_post.html')
 
     def test_post_edit_page_context(self):
         """Шаблон post_edit сформирован с правильным контекстом."""
@@ -82,6 +81,7 @@ class ContactURLTests(TestCase):
             with self.subTest(value=value):
                 form = response.context['form'].fields[value]
                 self.assertIsInstance(form, expected)
+        self.assertTemplateUsed(response, 'posts/create_post.html')
 
     def test_index_page(self):
         """Шаблон index сформирован с правильным контекстом."""
@@ -97,8 +97,7 @@ class ContactURLTests(TestCase):
     def test_group_list_page(self):
         """Шаблон group_list сформирован с правильным контекстом."""
         response = self.guest.get(
-            reverse('posts:group_list', kwargs={'slug': 'test-slug'})
-        )
+            reverse('posts:group_list', kwargs={'slug': 'test-slug'}))
         first_object = response.context['page_obj'][0]
         post_group_0 = first_object.group
         post_text_0 = first_object.text
@@ -108,18 +107,22 @@ class ContactURLTests(TestCase):
         self.assertEqual(post_author_0, self.user)
         self.assertEqual(
             response.context.get('group').description,
-            'Тестовое описание')
-        self.assertEqual(response.context.get('group').slug, 'test-slug')
+            'Тестовое описание'
+        )
+        self.assertEqual(
+            response.context.get('group').slug,
+            'test-slug'
+        )
         self.assertEqual(
             response.context.get('group').title,
-            'Тестовое название')
+            'Тестовое название'
+        )
 
     def test_profile_page(self):
         """Шаблон profile сформирован с правильным контекстом."""
         response = self.guest.get(
-            reverse(
-                'posts:profile', kwargs={
-                    'username': 'test'}))
+            reverse('posts:profile', kwargs={'username': 'test'})
+        )
         first_object = response.context['page_obj'][0]
         post_group_0 = first_object.group
         post_text_0 = first_object.text
@@ -133,10 +136,8 @@ class ContactURLTests(TestCase):
         """Шаблон post_detail сформирован с правильным контекстом."""
         post_id = str(self.post.id)
         response = self.guest.get(
-            reverse(
-                'posts:post_detail',
-                kwargs={
-                    'post_id': post_id}))
+            reverse('posts:post_detail', kwargs={'post_id': post_id})
+        )
         self.assertEqual(response.context.get('post'), self.post)
 
 
@@ -172,16 +173,13 @@ class PaginatorViewsTest(TestCase):
     def test_group_list_paginator(self):
         """Тестируем паджинатор страницы group_list."""
         response = self.guest.get(
-            reverse(
-                'posts:group_list',
-                kwargs={
-                    'slug': 'test-slug'}))
+            reverse('posts:group_list', kwargs={'slug': 'test-slug'})
+        )
         self.assertEqual(len(response.context['page_obj']), 10)
 
     def test_profile_paginator(self):
         """Тестируем паджинатор страницы profile."""
         response = self.guest.get(
-            reverse(
-                'posts:profile', kwargs={
-                    'username': 'test'}))
+            reverse('posts:profile', kwargs={'username': 'test'})
+        )
         self.assertEqual(len(response.context['page_obj']), 10)

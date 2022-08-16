@@ -65,6 +65,8 @@ class ContactURLTests(TestCase):
         response = self.guest.get(f'/posts/{post_id}/edit/', follow=True)
         self.assertRedirects(
             response, (f'/auth/login/?next=/posts/{post_id}/edit/'))
+        response = self.authoritized_user.get(f'/posts/{post_id}/edit/')
+        self.assertTemplateUsed(response, 'posts/create_post.html')
 
     def test_create_url_authoritized(self):
         """Страница /create/ для авторизированного пользователя"""
@@ -72,9 +74,11 @@ class ContactURLTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_create_url(self):
-        """Редирект /create/ для неавторизированного пользователя"""
+        """Проверка /create/ для неавторизированного пользователя"""
         response = self.guest.get('/create/')
         self.assertRedirects(response, ('/auth/login/?next=/create/'))
+        response = self.authoritized_user.get('/create/')
+        self.assertTemplateUsed(response, 'posts/create_post.html')
 
     def test_unexisting_page(self):
         """Несуществующая страница, ошибка 404"""
@@ -86,7 +90,6 @@ class ContactURLTests(TestCase):
         post_id = self.post.id
         templates_url_names = {
             'posts/index.html': '/',
-            'posts/create_post.html': ['/create/', f'/posts/{post_id}/edit/'],
             'posts/group_list.html': '/group/test-slug/',
             'posts/profile.html': '/profile/test/',
             'posts/post_detail.html': f'/posts/{post_id}/',
