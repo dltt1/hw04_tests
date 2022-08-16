@@ -1,0 +1,17 @@
+<!-- templates/app_name/just_page.html -->
+{% extends 'base.html' %}
+<html>
+  <head>
+    {%block title %}
+    <title>{{ just_title }}</title>
+    {% endblock %}
+  </head>
+  <body>
+    {% include 'includes/header.html' %}
+    {% block content %}
+    <h1>{{ just_title }}</h1>
+    <p>{{ just_text }}</p>
+    {% endblock %}
+    {% include 'includes/footer.html' %}
+  </body>
+</html>
