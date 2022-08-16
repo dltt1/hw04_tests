@@ -29,7 +29,6 @@ class PostFormTests(TestCase):
             group=cls.group,
         )
 
-
     def test_create_post(self):
         posts_count = Post.objects.count()
         response = self.authorized_client.post(

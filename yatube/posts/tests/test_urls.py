@@ -22,7 +22,6 @@ class ContactURLTests(TestCase):
             group=cls.group,
         )
 
-
     def setUp(self):
         """Пользователь"""
         self.guest = Client()
@@ -33,24 +32,20 @@ class ContactURLTests(TestCase):
         self.user_author = Client()
         self.user_author.force_login(self.post.author)
 
-
     def test_index_url(self):
         """Главная страница для неавторизированного пользователя"""
         response = self.guest.get('/')
         self.assertEqual(response.status_code, 200)
-
 
     def test_group_url(self):
         """Страница /group/<slug>/ для неавторизированного пользователя"""
         response = self.guest.get('/group/test-slug/')
         self.assertEqual(response.status_code, 200)
 
-    
     def test_profile_url(self):
         """Страница /profile/<str:username>/ для неавторизированного пользователя"""
         response = self.guest.get('/profile/test/')
         self.assertEqual(response.status_code, 200)
-
 
     def test_posts_url(self):
         """Страница /posts/<post_id>/ для неавторизированного пользователя"""
@@ -58,38 +53,33 @@ class ContactURLTests(TestCase):
         response = self.guest.get(f'/posts/{post_id}/')
         self.assertEqual(response.status_code, 200)
 
-
     def test_posts_edit_url(self):
         """Страница /posts/<post_id>/edit/ для автора"""
         post_id = self.post.id
         response = self.user_author.get(f'/posts/{post_id}/edit/')
         self.assertEqual(response.status_code, 200)
 
-
     def test_posts_edit_url(self):
         """Страница /posts/<post_id>/edit/ для неавторизированного пользователя, REDIRECT TO ..."""
         post_id = self.post.id
         response = self.guest.get(f'/posts/{post_id}/edit/', follow=True)
-        self.assertRedirects(response, (f'/auth/login/?next=/posts/{post_id}/edit/'))
-        
+        self.assertRedirects(
+            response, (f'/auth/login/?next=/posts/{post_id}/edit/'))
 
     def test_create_url_authoritized(self):
         """Страница /create/ для авторизированного пользователя"""
         response = self.authoritized_user.get('/create/')
         self.assertEqual(response.status_code, 200)
 
-
     def test_create_url(self):
         """Страница /create/ для неавторизированного пользователя, REDIRECT TO ..."""
         response = self.guest.get('/create/')
         self.assertRedirects(response, ('/auth/login/?next=/create/'))
 
-
     def test_unexisting_page(self):
         """Несуществующая страница, ошибка 404"""
         response = self.guest.get('/unexisting_page/')
         self.assertEqual(response.status_code, 200)
-
 
     def test_templates(self):
         """Проверяем шаблоны"""
