@@ -40,12 +40,12 @@ class ContactURLTests(TestCase):
 
     def test_group_url(self):
         """Страница /group/<slug>/ для неавторизированного пользователя"""
-        response = self.guest.get('/group/test-slug/')
+        response = self.guest.get(f'/group/{ContactURLTests.group.slug}/')
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_profile_url(self):
         """Страница profile для неавторизированного пользователя"""
-        response = self.guest.get('/profile/test/')
+        response = self.guest.get(f'/profile/{ContactURLTests.user.username}/')
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_posts_url(self):
@@ -60,7 +60,7 @@ class ContactURLTests(TestCase):
         response = self.user_author.get(f'/posts/{post_id}/edit/')
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
-    def test_posts_edit_url(self):
+    def test_posts_edit_url_nonauth(self):
         """Редирект после редактирования поста для неавт. польз."""
         post_id = self.post.id
         response = self.guest.get(f'/posts/{post_id}/edit/', follow=True)
@@ -91,8 +91,8 @@ class ContactURLTests(TestCase):
         post_id = self.post.id
         templates_url_names = {
             'posts/index.html': '/',
-            'posts/group_list.html': '/group/test-slug/',
-            'posts/profile.html': '/profile/test/',
+            'posts/group_list.html': f'/group/{ContactURLTests.group.slug}/',
+            'posts/profile.html': f'/profile/{ContactURLTests.user.username}/',
             'posts/post_detail.html': f'/posts/{post_id}/',
         }
         for template, url in templates_url_names.items():
