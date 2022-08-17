@@ -68,7 +68,10 @@ class ContactURLTests(TestCase):
             f'/posts/{ContactURLTests.post.id}/edit/', follow=True
         )
         self.assertRedirects(
-            response, (f'/auth/login/?next=/posts/{ContactURLTests.post.id}/edit/'))
+            response, (
+                f'/auth/login/?next=/posts/{ContactURLTests.post.id}/edit/'
+            )
+        )
         response = self.authorized_user.get(
             f'/posts/{ContactURLTests.post.id}/edit/'
         )
