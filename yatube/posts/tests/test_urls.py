@@ -55,15 +55,23 @@ class ContactURLTests(TestCase):
 
     def test_posts_edit_url(self):
         """Страница /posts/<post_id>/edit/ для автора"""
-        response = self.user_author.get(f'/posts/{ContactURLTests.post.id}/edit/')
+        response = self.user_author.get(
+            f'/posts/{ContactURLTests.post.id}/edit/'
+        )
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_posts_edit_url_nonauth(self):
-        """Редирект после редактирования поста для неавт. польз."""
-        response = self.guest.get(f'/posts/{ContactURLTests.post.id}/edit/', follow=True)
+        """
+        Редирект после редактирования поста для неавт. польз.
+        """
+        response = self.guest.get(
+            f'/posts/{ContactURLTests.post.id}/edit/', follow=True
+        )
         self.assertRedirects(
             response, (f'/auth/login/?next=/posts/{ContactURLTests.post.id}/edit/'))
-        response = self.authorized_user.get(f'/posts/{ContactURLTests.post.id}/edit/')
+        response = self.authorized_user.get(
+            f'/posts/{ContactURLTests.post.id}/edit/'
+        )
         self.assertTemplateUsed(response, 'posts/create_post.html')
 
     def test_create_url_authoritized(self):
