@@ -4,8 +4,6 @@ from posts.models import Post, Group
 from django.urls import reverse
 from django import forms
 
-from .test_urls import ContactURLTests
-
 from ..forms import PostForm
 
 User = get_user_model()
@@ -135,7 +133,7 @@ class PostViewTests(TestCase):
         self.check_context_contains_page_or_post(response.context)
 
         self.assertIn('author', response.context)
-        self.assertEqual(response.context['author'], ContactURLTests.user)
+        self.assertEqual(response.context['author'], PostViewTests.user)
 
     def test_post_detail_page(self):
         """Шаблон post_detail сформирован с правильным контекстом."""
