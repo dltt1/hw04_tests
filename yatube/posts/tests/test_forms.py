@@ -1,5 +1,3 @@
-from tokenize import group
-from urllib import response
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -75,9 +73,11 @@ class PostFormTests(TestCase):
             response_new_group,
             reverse('posts:post_detail', kwargs={'post_id': post.id}),
         )
-        
+
     def test_unauth_user_cant_publish_post(self):
         response = self.guest.get(
             reverse('posts:post_create'),
         )
-        self.assertRedirects(response, reverse('users:login') + '?next=/create/')
+        self.assertRedirects(
+            response, reverse('users:login') + '?next=/create/'
+        )

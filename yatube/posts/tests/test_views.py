@@ -46,10 +46,14 @@ class PostViewTests(TestCase):
                 reverse('posts:group_list', kwargs={'slug': self.group.slug})
             ),
             'posts/profile.html': (
-                reverse('posts:profile', kwargs={'username': self.user.username})
+                reverse(
+                    'posts:profile', kwargs={'username': self.user.username}
+                )
             ),
             'posts/post_detail.html': (
-                reverse('posts:post_detail', kwargs={'post_id': str(self.post.id)})
+                reverse(
+                    'posts:post_detail', kwargs={'post_id': str(self.post.id)}
+                )
             ),
         }
         for template, reverse_name in templates_names.items():

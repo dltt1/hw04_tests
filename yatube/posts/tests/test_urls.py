@@ -40,33 +40,30 @@ class ContactURLTests(TestCase):
 
     def test_group_url(self):
         """Страница /group/<slug>/ для неавторизированного пользователя"""
-        response = self.guest.get(f'/group/{ContactURLTests.group.slug}/')
+        response = self.guest.get(f'/group/{self.group.slug}/')
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_profile_url(self):
         """Страница profile для неавторизированного пользователя"""
-        response = self.guest.get(f'/profile/{ContactURLTests.user.username}/')
+        response = self.guest.get(f'/profile/{self.user.username}/')
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_posts_url(self):
         """Страница /posts/<post_id>/ для неавторизированного пользователя"""
-        post_id = self.post.id
-        response = self.guest.get(f'/posts/{post_id}/')
+        response = self.guest.get(f'/posts/{self.post.id}/')
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_posts_edit_url(self):
         """Страница /posts/<post_id>/edit/ для автора"""
-        post_id = self.post.id
-        response = self.user_author.get(f'/posts/{post_id}/edit/')
+        response = self.user_author.get(f'/posts/{self.post.id}/edit/')
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_posts_edit_url_nonauth(self):
         """Редирект после редактирования поста для неавт. польз."""
-        post_id = self.post.id
-        response = self.guest.get(f'/posts/{post_id}/edit/', follow=True)
+        response = self.guest.get(f'/posts/{self.post.id}/edit/', follow=True)
         self.assertRedirects(
-            response, (f'/auth/login/?next=/posts/{post_id}/edit/'))
-        response = self.authoritized_user.get(f'/posts/{post_id}/edit/')
+            response, (f'/auth/login/?next=/posts/{self.post.id}/edit/'))
+        response = self.authoritized_user.get(f'/posts/{self.post.id}/edit/')
         self.assertTemplateUsed(response, 'posts/create_post.html')
 
     def test_create_url_authoritized(self):
@@ -88,12 +85,11 @@ class ContactURLTests(TestCase):
 
     def test_templates(self):
         """Проверяем шаблоны"""
-        post_id = self.post.id
         templates_url_names = {
             'posts/index.html': '/',
-            'posts/group_list.html': f'/group/{ContactURLTests.group.slug}/',
-            'posts/profile.html': f'/profile/{ContactURLTests.user.username}/',
-            'posts/post_detail.html': f'/posts/{post_id}/',
+            'posts/group_list.html': f'/group/{self.group.slug}/',
+            'posts/profile.html': f'/profile/{self.user.username}/',
+            'posts/post_detail.html': f'/posts/{self.post.id}/',
         }
         for template, url in templates_url_names.items():
             with self.subTest(url=url):
