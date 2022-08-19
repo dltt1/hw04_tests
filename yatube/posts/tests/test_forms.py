@@ -1,5 +1,3 @@
-from distutils.dep_util import newer_group
-from tokenize import group
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
