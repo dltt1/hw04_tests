@@ -1,4 +1,3 @@
-from multiprocessing import context
 from django.shortcuts import redirect, render, get_object_or_404
 from .utils import paginate_page
 from .models import Post, Group, User
