@@ -1,3 +1,5 @@
+from distutils.dep_util import newer_group
+from tokenize import group
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -19,8 +21,8 @@ class PostFormTests(TestCase):
         )
         cls.new_post_text = 'new-text'
         cls.new_group = Group.objects.create(
-            title='new-test-group',
-            slug='new-test-group',
+            title='new-test-title',
+            slug='new-test-slug',
             description='new-test-description'
         )
         cls.form_data = {
@@ -73,6 +75,11 @@ class PostFormTests(TestCase):
             response_new_group,
             reverse('posts:post_detail', kwargs={'post_id': post.id}),
         )
+        self.assertEqual(Post.objects.count(), 1)
+        self.assertEqual(self.new_post_text, 'new-text')
+        self.assertEqual(self.new_group.title, 'new-test-title')
+        self.assertEqual(self.new_group.slug, 'new-test-slug')
+        self.assertEqual(self.new_group.description, 'new-test-description')
 
     def test_unauth_user_cant_publish_post(self):
         response = self.guest.get(

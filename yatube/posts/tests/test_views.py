@@ -73,6 +73,7 @@ class PostViewTests(TestCase):
     def test_post_create_page_correct_context(self):
         """Шаблон post_create сформирован с правильным контекстом."""
         response = self.authorized_user.get(reverse('posts:post_create'))
+        is_edit = response.context['is_edit']
         form_fields = {
             'text': forms.fields.CharField,
             'group': forms.ModelChoiceField,
@@ -83,7 +84,10 @@ class PostViewTests(TestCase):
                 self.assertIsInstance(form, expected)
         self.assertIn('form', response.context)
         self.assertIsInstance(response.context['form'], PostForm)
-        self.assertNotIn('is_edit', response.context)
+        self.assertIn('is_edit', response.context)
+        is_edit = response.context['is_edit']
+        self.assertIsInstance(is_edit, bool)
+        self.assertEqual(is_edit, False)
 
     def test_post_edit_page_context(self):
         """Шаблон post_edit сформирован с правильным контекстом."""
@@ -101,6 +105,9 @@ class PostViewTests(TestCase):
         self.assertIn('form', response.context)
         self.assertIsInstance(response.context['form'], PostForm)
         self.assertIn('is_edit', response.context)
+        is_edit = response.context['is_edit']
+        self.assertIsInstance(is_edit, bool)
+        self.assertEqual(is_edit, True)
 
     def test_index_page(self):
         """Шаблон index сформирован с правильным контекстом."""
@@ -110,7 +117,7 @@ class PostViewTests(TestCase):
     def test_group_list_page(self):
         """Шаблон group_list сформирован с правильным контекстом."""
         response = self.guest.get(
-            reverse('posts:group_list', kwargs={'slug': 'test-slug'}))
+            reverse('posts:group_list', kwargs={'slug': self.group.slug}))
         self.check_context_contains_page_or_post(response.context)
         self.assertEqual(
             response.context.get('group').description,

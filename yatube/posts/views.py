@@ -1,3 +1,4 @@
+from multiprocessing import context
 from django.shortcuts import redirect, render, get_object_or_404
 from .utils import paginate_page
 from .models import Post, Group, User
@@ -52,13 +53,15 @@ def post_detail(request, post_id):
 def post_create(request):
     template = 'posts/create_post.html'
     form = PostForm(request.POST or None)
+    is_edit = False
+    context = {'form': form, 'is_edit': is_edit}
     if request.method == 'POST':
         if form.is_valid():
             post = form.save(commit=False)
             post.author = request.user
             post.save()
             return redirect('posts:profile', request.user)
-    return render(request, template, {'form': form})
+    return render(request, template, context)
 
 
 @login_required
