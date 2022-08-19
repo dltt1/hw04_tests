@@ -41,16 +41,21 @@ class PostViewTests(TestCase):
         templates_names = {
             'posts/index.html': reverse('posts:index'),
             'posts/group_list.html': (
-                reverse('posts:group_list', kwargs={'slug': PostViewTests.group.slug})
+                reverse(
+                    'posts:group_list',
+                    kwargs={'slug': PostViewTests.group.slug}
+                )
             ),
             'posts/profile.html': (
                 reverse(
-                    'posts:profile', kwargs={'username': PostViewTests.user.username}
+                    'posts:profile',
+                    kwargs={'username': PostViewTests.user.username}
                 )
             ),
             'posts/post_detail.html': (
                 reverse(
-                    'posts:post_detail', kwargs={'post_id': str(PostViewTests.post.id)}
+                    'posts:post_detail',
+                    kwargs={'post_id': str(PostViewTests.post.id)}
                 )
             ),
         }
@@ -90,10 +95,15 @@ class PostViewTests(TestCase):
         self.assertEqual(is_edit, False)
 
     def test_post_edit_page_context(self):
-        """Шаблон post_edit сформирован с правильным контекстом."""
+        """
+        Шаблон post_edit сформирован
+        с правильным контекстом.
+        """
         response = self.user_author.get(
-            reverse('posts:post_edit', kwargs={'post_id': str(PostViewTests.post.id)})
-        )
+            reverse(
+                'posts:post_edit', kwargs={
+                    'post_id': str(
+                        PostViewTests.post.id)}))
         form_fields = {
             'text': forms.fields.CharField,
             'group': forms.ModelChoiceField,
@@ -117,7 +127,9 @@ class PostViewTests(TestCase):
     def test_group_list_page(self):
         """Шаблон group_list сформирован с правильным контекстом."""
         response = self.guest.get(
-            reverse('posts:group_list', kwargs={'slug': PostViewTests.group.slug}))
+            reverse(
+                'posts:group_list', kwargs={
+                    'slug': PostViewTests.group.slug}))
         self.check_context_contains_page_or_post(response.context)
         self.assertEqual(
             response.context.get('group').description,
@@ -135,8 +147,9 @@ class PostViewTests(TestCase):
     def test_profile_page(self):
         """Шаблон profile сформирован с правильным контекстом."""
         response = self.guest.get(
-            reverse('posts:profile', kwargs={'username': PostViewTests.user.username})
-        )
+            reverse(
+                'posts:profile', kwargs={
+                    'username': PostViewTests.user.username}))
         self.check_context_contains_page_or_post(response.context)
 
         self.assertIn('author', response.context)
@@ -145,8 +158,10 @@ class PostViewTests(TestCase):
     def test_post_detail_page(self):
         """Шаблон post_detail сформирован с правильным контекстом."""
         response = self.guest.get(
-            reverse('posts:post_detail', kwargs={'post_id': str(PostViewTests.post.id)})
-        )
+            reverse(
+                'posts:post_detail', kwargs={
+                    'post_id': str(
+                        PostViewTests.post.id)}))
         self.assertEqual(response.context.get('post'), PostViewTests.post)
 
 
