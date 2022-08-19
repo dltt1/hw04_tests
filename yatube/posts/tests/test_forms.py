@@ -35,7 +35,10 @@ class PostFormTests(TestCase):
         )
         self.assertRedirects(
             response,
-            reverse('posts:profile', kwargs={'username': PostFormTests.user.username}),
+            reverse(
+                'posts:profile',
+                kwargs={'username': PostFormTests.user.username}
+            ),
         )
         self.assertEqual(Post.objects.count(), 1)
         post = Post.objects.first()
@@ -81,7 +84,10 @@ class PostFormTests(TestCase):
         old_group_response = self.authorized_client.get(
             reverse('posts:group_list', args=(PostFormTests.group.slug,))
         )
-        self.assertEqual(old_group_response.context['page_obj'].paginator.count, 0)
+        self.assertEqual(
+            old_group_response.context['page_obj'].paginator.count,
+            0
+        )
 
     def test_unauth_user_cant_publish_post(self):
         response = self.guest.get(
