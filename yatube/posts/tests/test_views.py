@@ -78,7 +78,6 @@ class PostViewTests(TestCase):
         self.assertEqual(post.author, PostViewTests.user)
         self.assertEqual(post.text, PostViewTests.post.text)
         self.assertEqual(post.group, PostViewTests.post.group)
-        self.assertEqual(post.image, PostViewTests.post.image)
 
     def test_post_create_page_correct_context(self):
         """Шаблон post_create сформирован с правильным контекстом."""
