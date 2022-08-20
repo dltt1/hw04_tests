@@ -1,5 +1,9 @@
+import shutil
+import tempfile
 from django.contrib.auth import get_user_model
-from django.test import TestCase, Client
+from django.conf import settings
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase, Client, override_settings
 from posts.models import Post, Group
 from django.urls import reverse
 from django import forms
@@ -7,14 +11,29 @@ from django import forms
 from ..forms import PostForm
 
 User = get_user_model()
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostViewTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         """Создаем пользователя,группу, пост"""
         cls.user = User.objects.create_user(username='test')
+        cls.small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        cls.uploaded = SimpleUploadedFile(
+            name='small.gif',
+            content=cls.small_gif,
+            content_type='image/gif'
+        )
         cls.group = Group.objects.create(
             title='Тестовое название',
             slug='test-slug',
@@ -24,17 +43,23 @@ class PostViewTests(TestCase):
             text='Тестовый текст',
             author=cls.user,
             group=cls.group,
+            image=cls.uploaded
         )
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
         """Пользователь"""
         self.guest = Client()
         """Авторизированный пользователь"""
         self.authorized_user = Client()
-        self.authorized_user.force_login(self.user)
+        self.authorized_user.force_login(PostViewTests.user)
         """Автор"""
         self.user_author = Client()
-        self.user_author.force_login(self.post.author)
+        self.user_author.force_login(PostViewTests.post.author)
 
     def test_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
@@ -74,6 +99,7 @@ class PostViewTests(TestCase):
         self.assertEqual(post.author, PostViewTests.user)
         self.assertEqual(post.text, PostViewTests.post.text)
         self.assertEqual(post.group, PostViewTests.post.group)
+        self.assertEqual(post.image, PostViewTests.post.image)
 
     def test_post_create_page_correct_context(self):
         """Шаблон post_create сформирован с правильным контекстом."""
@@ -162,7 +188,7 @@ class PostViewTests(TestCase):
                 'posts:post_detail', kwargs={
                     'post_id': str(
                         PostViewTests.post.id)}))
-        self.assertEqual(response.context.get('post'), PostViewTests.post)
+        self.check_context_contains_page_or_post(response.context, post=True)
 
 
 class PaginatorViewsTest(TestCase):
@@ -200,13 +226,19 @@ class PaginatorViewsTest(TestCase):
     def test_group_list_paginator(self):
         """Тестируем паджинатор страницы group_list."""
         response = self.guest.get(
-            reverse('posts:group_list', kwargs={'slug': 'test-slug'})
+            reverse(
+                'posts:group_list',
+                kwargs={'slug': PaginatorViewsTest.group.slug}
+            )
         )
         self.assertEqual(len(response.context['page_obj']), 10)
 
     def test_profile_paginator(self):
         """Тестируем паджинатор страницы profile."""
         response = self.guest.get(
-            reverse('posts:profile', kwargs={'username': 'test'})
+            reverse(
+                'posts:profile',
+                kwargs={'username': PaginatorViewsTest.user.username}
+            )
         )
         self.assertEqual(len(response.context['page_obj']), 10)
