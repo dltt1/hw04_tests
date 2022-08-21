@@ -2,7 +2,6 @@ import shutil
 import tempfile
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, Client, override_settings
 from posts.models import Post, Group
 from django.urls import reverse
@@ -20,19 +19,6 @@ class PostViewTests(TestCase):
         super().setUpClass()
         """Создаем пользователя,группу, пост"""
         cls.user = User.objects.create_user(username='test')
-        cls.small_gif = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
-        )
-        cls.uploaded = SimpleUploadedFile(
-            name='small.gif',
-            content=cls.small_gif,
-            content_type='image/gif'
-        )
         cls.group = Group.objects.create(
             title='Тестовое название',
             slug='test-slug',
@@ -42,7 +28,6 @@ class PostViewTests(TestCase):
             text='Тестовый текст',
             author=cls.user,
             group=cls.group,
-            image=cls.uploaded
         )
 
     @classmethod
@@ -98,7 +83,6 @@ class PostViewTests(TestCase):
         self.assertEqual(post.author, PostViewTests.user)
         self.assertEqual(post.text, PostViewTests.post.text)
         self.assertEqual(post.group, PostViewTests.post.group)
-        self.assertEqual(post.image, PostViewTests.post.image)
 
     def test_post_create_page_correct_context(self):
         """Шаблон post_create сформирован с правильным контекстом."""
