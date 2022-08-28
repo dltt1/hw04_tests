@@ -1,12 +1,14 @@
 import shutil
 import tempfile
+from http import HTTPStatus
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, Client, override_settings
-from posts.models import Post, Group
+from posts.models import Post, Group, Follow
 from django.urls import reverse
-
 from ..forms import PostForm
+from django.core.cache import cache
 
 User = get_user_model()
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
@@ -19,6 +21,20 @@ class PostViewTests(TestCase):
         super().setUpClass()
         """Создаем пользователя,группу, пост"""
         cls.user = User.objects.create_user(username='test')
+        cls.author_user = User.objects.create(username='author-test')
+        cls.small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        cls.uploaded = SimpleUploadedFile(
+            name='small.gif',
+            content=cls.small_gif,
+            content_type='image/gif'
+        )
         cls.group = Group.objects.create(
             title='Тестовое название',
             slug='test-slug',
@@ -28,6 +44,7 @@ class PostViewTests(TestCase):
             text='Тестовый текст',
             author=cls.user,
             group=cls.group,
+            image=cls.uploaded
         )
 
     @classmethod
@@ -44,6 +61,8 @@ class PostViewTests(TestCase):
         """Автор"""
         self.user_author = Client()
         self.user_author.force_login(PostViewTests.post.author)
+        """Чистим кэш"""
+        cache.clear()
 
     def test_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
@@ -83,6 +102,7 @@ class PostViewTests(TestCase):
         self.assertEqual(post.author, PostViewTests.user)
         self.assertEqual(post.text, PostViewTests.post.text)
         self.assertEqual(post.group, PostViewTests.post.group)
+        self.assertEqual(post.image, PostViewTests.post.image)
 
     def test_post_create_page_correct_context(self):
         """Шаблон post_create сформирован с правильным контекстом."""
@@ -110,6 +130,22 @@ class PostViewTests(TestCase):
         is_edit = response.context['is_edit']
         self.assertIsInstance(is_edit, bool)
         self.assertEqual(is_edit, True)
+
+    def test_add_comment_for_guest(self):
+        """
+        Неавторизированный пользователь не
+        может оставлять комиентарий
+        """
+        response = self.guest.get(
+            reverse(
+                'posts:add_comment',
+                args={PostViewTests.post.id}
+            )
+        )
+        self.assertEqual(
+            response.status_code,
+            HTTPStatus.FOUND
+        )
 
     def test_index_page(self):
         """Шаблон index сформирован с правильным контекстом."""
@@ -155,6 +191,50 @@ class PostViewTests(TestCase):
                     'post_id': str(
                         PostViewTests.post.id)}))
         self.check_context_contains_page_or_post(response.context, post=True)
+
+    def test_add_comment_for_guest(self):
+        response = self.client.get(
+            reverse(
+                'posts:add_comment',
+                args={PostViewTests.post.id}
+            )
+        )
+        self.assertEqual(
+            response.status_code,
+            HTTPStatus.FOUND
+        )
+
+    def test_auth_follow_to_user(self):
+        """Подписка авторизированным пользователем"""
+        self.authorized_user.get(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username': PostViewTests.author_user.username}
+            )
+        )
+        self.assertTrue(Follow.objects.filter(author=self.author_user,
+                                              user=self.user))
+
+    def test_non_auth_follow_to_user(self):
+        """Подписка неавт. польз."""
+        self.guest.get(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username': PostViewTests.author_user.username}
+            )
+        )
+        self.assertFalse(Follow.objects.filter(author=self.author_user,
+                                              user=self.user))
+
+    def test_unfolow_auth(self):
+        self.authorized_user.get(
+            reverse(
+                'posts:profile_unfollow',
+                kwargs={'username': PostViewTests.author_user.username}
+            )
+        )
+        self.assertFalse(Follow.objects.filter(author=self.author_user,
+                                              user=self.user))
 
 
 class PaginatorViewsTest(TestCase):
@@ -208,3 +288,46 @@ class PaginatorViewsTest(TestCase):
             )
         )
         self.assertEqual(len(response.context['page_obj']), 10)
+
+
+class CacheViewTest(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.author = User.objects.create_user(username='test-user')
+        cls.authorized_client = Client()
+        cls.authorized_client.force_login(cls.author)
+        cls.group = Group.objects.create(
+            title='test-group',
+            slug='test-slug',
+            description='test-description'
+        )
+        cls.post = Post.objects.create(
+            text='test-post',
+            group=cls.group,
+            author=cls.author
+        )
+
+    def test_cache_index(self):
+        """Проверка хранения и очищения кэша для index."""
+        response = CacheViewTest.authorized_client.get(reverse('posts:index'))
+        posts = response.content
+        Post.objects.create(
+            text='test-new-post',
+            author=CacheViewTest.author,
+        )
+        response_old = CacheViewTest.authorized_client.get(
+            reverse('posts:index')
+        )
+        old_posts = response_old.content
+        self.assertEqual(
+            old_posts,
+            posts,
+            'Не возвращает кэшированную страницу.'
+        )
+        cache.clear()
+        response_new = CacheViewTest.authorized_client.get(
+            reverse('posts:index')
+        )
+        new_posts = response_new.content
+        self.assertNotEqual(old_posts, new_posts, 'Нет сброса кэша.')

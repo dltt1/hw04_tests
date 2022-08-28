@@ -1,5 +1,5 @@
 {% load static %}
-{% with request.resolver_match.view_name as view_name %}
+
 
 <nav class="navbar navbar-light" style="background-color: lightskyblue">
   <div class="container">
@@ -8,6 +8,7 @@
       <span style="color:red">Ya</span>tube
     </a>
     <ul class="nav nav-pills">
+      {% with request.resolver_match.view_name as view_name %}
       <li class="nav-item"> 
         <a class="nav-link {% if view_name  == 'about:author' %}
         active

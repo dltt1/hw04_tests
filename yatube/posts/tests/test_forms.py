@@ -7,7 +7,7 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from http import HTTPStatus
 
-from posts.models import Group, Post
+from posts.models import Group, Post, Comment
 
 User = get_user_model()
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
@@ -109,9 +109,40 @@ class PostFormTests(TestCase):
         )
 
     def test_unauth_user_cant_publish_post(self):
+        """Неавт. польз. не может сделать пост"""
         response = self.guest.get(
             reverse('posts:post_create'),
         )
         self.assertRedirects(
             response, reverse('users:login') + '?next=/create/'
+        )
+
+    def test_comment_create_form(self):
+        """
+        Проверка создания комментария через форму под постом
+        """
+        post = Post.objects.create(
+            text='test-text',
+            author=self.user,
+            group=self.group
+        )
+        form_data = {
+            'text': 'text'
+        }
+        response = self.authorized_client.post(
+            reverse('posts:add_comment', kwargs={'post_id': post.id}),
+            data=form_data,
+            follow=True
+        )
+        self.assertRedirects(
+            response,
+            reverse('posts:post_detail', kwargs={
+                'post_id': post.pk
+            }))
+
+        self.assertTrue(Comment.objects.count(), 1)
+        self.assertTrue(
+            post.comments.filter(
+                text=form_data['text']
+            ).exists()
         )

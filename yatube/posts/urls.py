@@ -1,4 +1,3 @@
-# posts/urls.py
 from django.urls import path
 
 from . import views
@@ -17,5 +16,20 @@ urlpatterns = [
     # Новая запись
     path('create/', views.post_create, name='post_create'),
     # Редактирование записи
-    path('posts/<int:post_id>/edit/', views.post_edit, name='post_edit')
+    path('posts/<int:post_id>/edit/', views.post_edit, name='post_edit'),
+    # Комментарий
+    path(
+        'posts/<int:post_id>/comment/',
+        views.add_comment, name='add_comment'
+    ),
+    # Подписка
+    path('follow/', views.follow_index, name='follow_index'),    
+    path(
+        'profile/<str:username>/follow/',
+        views.profile_follow, name='profile_follow',
+    ),
+    # Отписка
+    path('profile/<str:username>/unfollow/',
+    views.profile_unfollow, name='profile_unfollow'
+    ),
 ]

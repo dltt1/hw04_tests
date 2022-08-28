@@ -106,3 +106,23 @@ class ContactURLTests(TestCase):
             with self.subTest(url=url):
                 response = self.authorized_user.get(url)
                 self.assertTemplateUsed(response, template)
+
+    def test_guest_redirect_comment(self):
+        """Неавт. польз. не иожет писать комментарии"""
+        response = self.guest.get(
+            f'/posts/{ContactURLTests.post.id}/comment/'
+        )
+        self.assertRedirects(
+            response,
+            (f'/auth/login/?next=/posts/{ContactURLTests.post.id}/comment/')
+        )
+
+    def test_404_page_not_found(self):
+        """Ошибка стр. не существует 404"""
+        response = self.guest.get(
+            f'/404notfound/'
+        )
+        self.assertEqual(
+            response.status_code,
+            HTTPStatus.NOT_FOUND
+        )
